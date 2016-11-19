@@ -1,46 +1,53 @@
 import numpy as np
 
-def calcR(P,E):
-    # R = | P - E |
-    ro = np.square(P[0,0]+E[0]) + np.square(P[0,1]+E[1]) + np.square(P[0,2]+E[2])
-    r1 = np.square(P[1,0]+E[0]) + np.square(P[1,1]+E[1]) + np.square(P[1,2]+E[2])
-    r2 = np.square(P[2,0]+E[0]) + np.square(P[2,1]+E[1]) + np.square(P[2,2]+E[2])
-    r3 = np.square(P[3,0]+E[0]) + np.square(P[3,1]+E[1]) + np.square(P[3,2]+E[2])
-    r4 = np.square(P[4,0]+E[0]) + np.square(P[4,1]+E[1]) + np.square(P[4,2]+E[2])
-    R0 = np.sqrt(ro);  R1 = np.sqrt(r1);
-    R2 = np.sqrt(r2);  R3 = np.sqrt(r3);
-    R4 = np.sqrt(r4);
-    return np.array([R0,R1,R2,R3,R4])
+def calcR(hydrophonePositionArray,pingerLocation):
+    # R = | hydrophonePositionArray - pingerLocation |
 
-def tau(P,T,v):
+    #hax
+    r = [0,0,0,0,0]
+    R = [0,0,0,0,0]
+
+    for i in range(5):
+        r[i] = np.square(hydrophonePositionArray[i,0]+pingerLocation[0]) + \
+               np.square(hydrophonePositionArray[i,1]+pingerLocation[1]) + \
+               np.square(hydrophonePositionArray[i,2]+pingerLocation[2])
+        
+        R[i] = np.sqrt(r[i])
+
+    return np.array([R[0],R[1],R[2],R[3],R[4]])
+
+def tau(hydrophonePositionArray,timeOfSignalArrival,soundVelocity):
     # returns TAUm = wave speed * time difference
     # between reciever m and o
     TAU = np.zeros(4);
     for m in range(1,5):
-        TAU[m-1] = v*T[m] - v*T[0];
+        TAU[m-1] = soundVelocity*timeOfSignalArrival[m] - soundVelocity*timeOfSignalArrival[0];
     return TAU
 
-def constCoef(P,TAU):
+def constCoef(hydrophonePositionArray,TAU):
     # Am = (2*Xm/TAUm) - (2*X1/TAU1)
     # bm = (2*Ym/TAUm) - (2*Y1/TAU1)
     # cm = (2*Zm/TAUm) - (2*Z1/TAU1)
     # dm = TAUm - TAU1 - (Xm^2 + Ym^2 +Zm^2)/TAUm + (X1^2 + Y1^2 +Z1^2)/TAU1
     coef = np.zeros((3,3));
-    D = np.zeros((3,1));
-    subA = 2*P[1,0]/TAU[0];
-    subB = 2*P[1,1]/TAU[0];
-    subC = 2*P[1,2]/TAU[0];
-    subD = (np.square(P[1,0]) + np.square(P[1,1]) + np.square(P[1,2]))/TAU[0]
+    D    = np.zeros((3,1));
+
+    subA = 2*hydrophonePositionArray[1,0]/TAU[0];
+    subB = 2*hydrophonePositionArray[1,1]/TAU[0];
+    subC = 2*hydrophonePositionArray[1,2]/TAU[0];
+    subD = (np.square(hydrophonePositionArray[1,0]) + np.square(hydrophonePositionArray[1,1]) + np.square(hydrophonePositionArray[1,2]))/TAU[0]
+    
     for m in range(2,5):
-        Am = (2*P[m,0]/TAU[m-1]) - subA
-        Bm = (2*P[m,1]/TAU[m-1]) - subB
-        Cm = (2*P[m,2]/TAU[m-1]) - subC
-        tmp = np.square(P[m,0]) + np.square(P[m,1]) + np.square(P[m,2])
+        Am = (2*hydrophonePositionArray[m,0]/TAU[m-1]) - subA
+        Bm = (2*hydrophonePositionArray[m,1]/TAU[m-1]) - subB
+        Cm = (2*hydrophonePositionArray[m,2]/TAU[m-1]) - subC
+        tmp = np.square(hydrophonePositionArray[m,0]) + np.square(hydrophonePositionArray[m,1]) + np.square(hydrophonePositionArray[m,2])
         Dm = TAU[m-1] - TAU[0] - (tmp/TAU[m-1]) + subD
         coef[m-2,0] = Am;
         coef[m-2,1] = Bm;
         coef[m-2,2] = Cm;
         D[m-2] = Dm
+
     return (coef,D)
 
 
@@ -54,67 +61,74 @@ def calcE(coef,D):
 
 
 # given emmitter and reciever position
-# calculate T (time signal arives at each reciever)
-def problem1(P,E,v):
-    R = calcR(P,E);
-    T = np.divide(R,v);
+# calculate timeOfSignalArrival (time signal arives at each reciever)
+def problem1(hydrophonePositionArray,pingerLocation,soundVelocity):
+    R = calcR(hydrophonePositionArray,pingerLocation);
+    timeOfSignalArrival = np.divide(R,soundVelocity);
     print ("R",R)
-    print ("T",T)
-    return T
+    print ("timeOfSignalArrival",timeOfSignalArrival)
+    return timeOfSignalArrival
 
 # given reciever position and signal arival times
 # calculate the location of emmitter
-def problem2(P,T,v):
+def problem2(hydrophonePositionArray,timeOfSignalArrival,soundVelocity):
     # calculate tau
     # solve for coeficients
     # solve system of equations
-    TAU = tau(P,T,v);
-    coef,D = constCoef(P,TAU);
-    E = calcE(coef,D)
+    TAU = tau(hydrophonePositionArray,timeOfSignalArrival,soundVelocity);
+    coef,D = constCoef(hydrophonePositionArray,TAU);
+    pingerLocation = calcE(coef,D)
     print ("TAU",TAU)
     print ("coef",coef);
     print ("D",D)
-    return E
+    return pingerLocation
 
 
 
 
 def main():
     # parameters:
-    #   P - array of hydrophone position vectors
-    #   T - array of times for when each hydrophone RX'ed the signal
-    #   v - wave speed
-    #   E - location of the emmitter
-    #   TAU - time shift given velocity of wave
-    #         TAUm = vTm - vTo
-    P = np.array([[0,0,0],
-                 [1,0,0],
-                 [0,1,0],
-                 [-1,0,0],
-                 [0,-1,0]]);
-    E = np.array([-44,6,5]);
-    v = 1481; # (m/s) speed of sound in water at 20 deg C
+
+    #   hydrophonePositionArray - array of hydrophone position vectors [x,y,z]?
+    #   timeOfSignalArrival     - array of times for when each hydrophone RX'ed the signal
+    #   soundVelocity           - wave speed
+    #   pingerLocation          - location of the emmitter
+    #   TAU                     - time shift given velocity of wave
+    #   TAUm = vTm - vTo
+
+    #coordinates of hydrophones 
+    hydrophone0 = [0,0,0]       #center
+    hydrophone1 = [1,0,0]       #right
+    hydrophone2 = [0,1,0]       #front
+    hydrophone3 = [-1,0,0]      #left
+    hydrophone4 = [0,-1,0]      #back
+
+    hydrophoneArrangement   = [hydrophone0,hydrophone1,hydrophone2,hydrophone3,hydrophone4]
+    hydrophonePositionArray = np.array(hydrophoneArrangement)
+    pingerLocation          = np.array([-44,6,5]);
+
+    #speed that sound travels underwater in meters/second @ 20 degrees Celsius
+    soundVelocity = 1481;
+
+    print "\n PARAMETERS \n"
+
+    print ("hydrophonePositionArray",hydrophonePositionArray)
+    print ("soundVelocity",soundVelocity)
+    print ("pingerLocation",pingerLocation)
+    print('''
+
+
+PROBLEM 1: given hydrophonePositionArray and pingerLocation calculate timeOfSignalArrival
+    ''')
+    timeOfSignalArrival = problem1(hydrophonePositionArray,pingerLocation,soundVelocity);
+    print "timeOfSignalArrival",timeOfSignalArrival
 
     print('''
-PARAMETERS
+
+
+PROBLEM 2: given hydrophonePositionArray and timeOfSignalArrival calculate pingerLocation
     ''')
-    print ("P",P)
-    print ("v",v)
-    print ("E",E)
-    print('''
-
-
-PROBLEM 1: given P and E calculate T
-    ''')
-    T = problem1(P,E,v);
-    print "T",T
-
-    print('''
-
-
-PROBLEM 2: given P and T calculate E
-    ''')
-    E = problem2(P,T,v);
-    print ("E",E);
+    pingerLocation = problem2(hydrophonePositionArray,timeOfSignalArrival,soundVelocity);
+    print ("pingerLocation",pingerLocation);
 if __name__ == "__main__":
     main()
