@@ -12,7 +12,6 @@ void linSys(gsl_matrix *A, gsl_vector *B, gsl_vector *X ){
 	gsl_linalg_LU_refine(A_orriginal,A,perm, B, X, residual);
 	return;
 }
-/*
 void TEST_linSys(){
 	// test solving linear system of equations
 	double a_data[] = { 0.18, 0.60, 0.57, 0.96,
@@ -22,17 +21,19 @@ void TEST_linSys(){
 
 	double b_data[] = { 1.0, 2.0, 3.0, 4.0 };
 
-  	gsl_matrix_view a = gsl_matrix_view_array (a_data, 4, 4);
+  	gsl_matrix_view a_view = gsl_matrix_view_array (a_data, 4, 4);
 
-	gsl_vector_view b = gsl_vector_view_array (b_data, 4);
+	gsl_vector_view b_view = gsl_vector_view_array (b_data, 4);
 
 	gsl_vector *x = gsl_vector_alloc (4);
 
+	gsl_matrix * a = &a_view.matrix;
+	gsl_vector * b = &b_view.vector;
 	linSys(a,b,x);
 	printf("X = \n");
 	gsl_vector_fprintf(stdout, x,"%g");
 }
-*/
+
 void calcR(gsl_matrix_view P,gsl_vector_view E, gsl_vector *R){
 	double e0 = gsl_vector_get(&E.vector,0);
 	double e1 = gsl_vector_get(&E.vector,1);
@@ -109,12 +110,7 @@ void constCoef(gsl_matrix_view P,gsl_vector *TAU, gsl_matrix *COEF, gsl_vector *
 		gsl_matrix_set(COEF,m-2,0,Am);
 		gsl_matrix_set(COEF,m-2,1,Bm);
 		gsl_matrix_set(COEF,m-2,2,Cm);
-		gsl_vector_set(D,m-2,Dm);m = (2*Xm/TAUm) - (2*X1/TAU1)
-    # bm = (2*Ym/TAUm) - (2*Y1/TAU1)
-    # cm = (2*Zm/TAUm) - (2*Z1/TAU1)
-    # dm = TAUm - TAU1 - (Xm^2 + Ym^2 +Zm^2)/TAUm + (X1^2 + Y1^2 +Z1^2)/TAU1
-
-		
+		gsl_vector_set(D,m-2,Dm);
 
 	}
 
@@ -161,16 +157,18 @@ int main(){
 	gsl_vector *T = gsl_vector_alloc(5);
 	gsl_vector *approxE = gsl_vector_alloc(3);
 	//gsl_matrix_fprintf(stdout, &P.matrix, "%g");
-	//printf("TEST linSys\n--------------------\n");
-	//TEST_linSys();
+/*
+	printf("TEST linSys\n--------------------\n");
+	TEST_linSys();
 	printf("\nProblem1: calc T\n--------------------\n");
+*/
 	problem1(P,E,v,T);
 	printf("T = \n");
 	gsl_vector_fprintf(stdout,T,"%g");
 	printf("\nProblem2: approximate location of E\n--------------------\n");
 	problem2(P,T,v,approxE);
-	//printf("approxE = \n");
-	//gsl_vector_fprintf(stdout,approxE,"%g");
+	printf("approxE = \n");
+	gsl_vector_fprintf(stdout,approxE,"%g");
 	
 	 
 	return 0;
