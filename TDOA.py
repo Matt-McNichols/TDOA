@@ -45,11 +45,12 @@ def constCoef(P,TAU):
 
 
 def calcE(coef,D):
-    # [ A2  B2  C2 ] * [ X ]= [ -D2 ]
-    # [ A3  B3  C3 ] * [ Y ]= [ -D3 ]
-    # [ A4  B4  C4 ] * [ Z ]= [ -D4 ]
+    # [ A2  B2  C2 ] * [ X ]= [ D2 ]
+    # [ A3  B3  C3 ] * [ Y ]= [ D3 ]
+    # [ A4  B4  C4 ] * [ Z ]= [ D4 ]
     # return (x,y,z) the estimated location of the audio source
     approxE = np.linalg.lstsq(coef,D)
+    print approxE;
     return approxE[0]
 
 
@@ -87,12 +88,12 @@ def main():
     #   E - location of the emmitter
     #   TAU - time shift given velocity of wave
     #         TAUm = vTm - vTo
-    P = np.array([[0,0,0],
+    P = np.array([[0,0,1],
                  [1,0,0],
                  [0,1,0],
                  [-1,0,0],
                  [0,-1,0]]);
-    E = np.array([-44,6,5]);
+    E = np.array([-4,6,5]);
     v = 1481; # (m/s) speed of sound in water at 20 deg C
 
     print('''
