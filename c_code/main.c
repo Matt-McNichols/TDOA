@@ -4,12 +4,20 @@
 #include<gsl/gsl_linalg.h>
 
 void linSys(gsl_matrix *A, gsl_vector *B, gsl_vector *X ){
-	int s;
+	//int s;
+	gsl_matrix *V = gsl_matrix_alloc(3,3);
+	gsl_vector *S = gsl_vector_alloc(3);
+	gsl_vector *work = gsl_vector_alloc(3);
+	gsl_vector *b = gsl_vector_alloc(3);
+	gsl_linalg_SV_decomp (A, V, S, work);
+	gsl_linalg_SV_solve(A,V,S,b,X);
+/*
 	gsl_matrix *A_orriginal = A;
 	gsl_vector *residual = gsl_vector_alloc(3);
 	gsl_permutation *perm = gsl_permutation_alloc(3);
 	gsl_linalg_LU_decomp(A,perm,&s);
 	gsl_linalg_LU_refine(A_orriginal,A,perm, B, X, residual);
+*/
 	return;
 }
 void TEST_linSys(){
