@@ -88,7 +88,7 @@ def main():
     #   E - location of the emmitter
     #   TAU - time shift given velocity of wave
     #         TAUm = vTm - vTo
-    P = np.array([[0,0,1],
+    P = np.array([[0,0,0],
                  [1,0,0],
                  [0,1,0],
                  [-1,0,0],

@@ -3,25 +3,19 @@
 #include "utilityFunctions.h"
 #include<gsl/gsl_linalg.h>
 
-void linSys(gsl_matrix *A, gsl_vector *B, gsl_vector *X ){
-	//int s;
-	gsl_matrix *V = gsl_matrix_alloc(3,3);
-	gsl_vector *S = gsl_vector_alloc(3);
-	gsl_vector *work = gsl_vector_alloc(3);
-	gsl_vector *b = gsl_vector_alloc(3);
+void linSys(gsl_matrix *A, gsl_vector *B, gsl_vector *X, int size ){
+	gsl_matrix *V = gsl_matrix_alloc(size,size);
+	gsl_vector *S = gsl_vector_alloc(size);
+	gsl_vector *work = gsl_vector_alloc(size);
+	printf("A = \n");
+	gsl_matrix_fprintf(stdout, A,"%g");
 	gsl_linalg_SV_decomp (A, V, S, work);
-	gsl_linalg_SV_solve(A,V,S,b,X);
-/*
-	gsl_matrix *A_orriginal = A;
-	gsl_vector *residual = gsl_vector_alloc(3);
-	gsl_permutation *perm = gsl_permutation_alloc(3);
-	gsl_linalg_LU_decomp(A,perm,&s);
-	gsl_linalg_LU_refine(A_orriginal,A,perm, B, X, residual);
-*/
+	printf("U = \n");
+	gsl_matrix_fprintf(stdout, A,"%g");
+	gsl_linalg_SV_solve(A,V,S,B,X);
 	return;
 }
 void TEST_linSys(){
-	// test solving linear system of equations
 	double a_data[] = { 0.18, 0.60, 0.57, 0.96,
                       0.41, 0.24, 0.99, 0.58,
                       0.14, 0.30, 0.97, 0.66,
@@ -37,7 +31,7 @@ void TEST_linSys(){
 
 	gsl_matrix * a = &a_view.matrix;
 	gsl_vector * b = &b_view.vector;
-	linSys(a,b,x);
+	linSys(a,b,x,4);
 	printf("X = \n");
 	gsl_vector_fprintf(stdout, x,"%g");
 }
@@ -131,7 +125,7 @@ void problem1(gsl_matrix_view P, gsl_vector_view E, double v, gsl_vector *T){
 	double vInv = 1/v;
 	printf("calc R\n");
 	calcR(P,E,R);
-	gsl_vector_fprintf(stdout,R,"%g");
+	//gsl_vector_fprintf(stdout,R,"%g");
 	*T = *R;
 	gsl_vector_scale(T,vInv);
 }
@@ -142,19 +136,19 @@ void problem2(gsl_matrix_view P, gsl_vector * T, double v, gsl_vector *approxE){
 	gsl_matrix *COEF = gsl_matrix_alloc(3,3);
 	calcTAU(P,T,v,TAU);
 	printf("TAU = \n");
-	gsl_vector_fprintf(stdout,TAU,"%g");
+	//gsl_vector_fprintf(stdout,TAU,"%g");
 	constCoef(P,TAU,COEF,D);
 	printf("COEF = \n");
 	gsl_matrix_fprintf(stdout,COEF,"%g");
 	printf("D = \n");
 	gsl_vector_fprintf(stdout,D,"%g");
-	linSys(COEF, D, approxE);
+	linSys(COEF, D, approxE, 3);
 }
 
 int main(){
 	printf("\n\nParameters\n--------------------\n");
 	double v = 1481;
-	double P_data [] = { 0, 0, 1,
+	double P_data [] = { 0, 0, 0,
 			     1, 0, 0,
 			     0, 1, 0,
 			    -1, 0, 0,
@@ -165,11 +159,9 @@ int main(){
 	gsl_vector *T = gsl_vector_alloc(5);
 	gsl_vector *approxE = gsl_vector_alloc(3);
 	//gsl_matrix_fprintf(stdout, &P.matrix, "%g");
-/*
 	printf("TEST linSys\n--------------------\n");
 	TEST_linSys();
 	printf("\nProblem1: calc T\n--------------------\n");
-*/
 	problem1(P,E,v,T);
 	printf("T = \n");
 	gsl_vector_fprintf(stdout,T,"%g");
@@ -177,7 +169,6 @@ int main(){
 	problem2(P,T,v,approxE);
 	printf("approxE = \n");
 	gsl_vector_fprintf(stdout,approxE,"%g");
-	
 	 
 	return 0;
 }
