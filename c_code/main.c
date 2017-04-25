@@ -1,17 +1,13 @@
 #include<stdio.h>
+#include<time.h>
 #include<math.h>
-#include "utilityFunctions.h"
 #include<gsl/gsl_linalg.h>
 
 void linSys(gsl_matrix *A, gsl_vector *B, gsl_vector *X, int size ){
 	gsl_matrix *V = gsl_matrix_alloc(size,size);
 	gsl_vector *S = gsl_vector_alloc(size);
 	gsl_vector *work = gsl_vector_alloc(size);
-	printf("A = \n");
-	gsl_matrix_fprintf(stdout, A,"%g");
 	gsl_linalg_SV_decomp (A, V, S, work);
-	printf("U = \n");
-	gsl_matrix_fprintf(stdout, A,"%g");
 	gsl_linalg_SV_solve(A,V,S,B,X);
 	return;
 }
@@ -74,7 +70,6 @@ void calcR(gsl_matrix_view P,gsl_vector_view E, gsl_vector *R){
 
 void calcTAU(gsl_matrix_view P,gsl_vector *T, double v, gsl_vector *TAU){
 	double To = gsl_vector_get(T,0);
-	printf("To = %g\n",To);
 	double val;
 	int m;
 	for(m = 1; m<5; m++){
@@ -123,8 +118,9 @@ void constCoef(gsl_matrix_view P,gsl_vector *TAU, gsl_matrix *COEF, gsl_vector *
 void problem1(gsl_matrix_view P, gsl_vector_view E, double v, gsl_vector *T){
 	gsl_vector *R = gsl_vector_alloc(5);
 	double vInv = 1/v;
-	printf("calc R\n");
 	calcR(P,E,R);
+	printf("R = \n");
+	gsl_vector_fprintf(stdout,R,"%g");
 	//gsl_vector_fprintf(stdout,R,"%g");
 	*T = *R;
 	gsl_vector_scale(T,vInv);
@@ -135,7 +131,6 @@ void problem2(gsl_matrix_view P, gsl_vector * T, double v, gsl_vector *approxE){
 	gsl_vector *D   = gsl_vector_alloc(3);
 	gsl_matrix *COEF = gsl_matrix_alloc(3,3);
 	calcTAU(P,T,v,TAU);
-	printf("TAU = \n");
 	//gsl_vector_fprintf(stdout,TAU,"%g");
 	constCoef(P,TAU,COEF,D);
 	printf("COEF = \n");
@@ -146,21 +141,26 @@ void problem2(gsl_matrix_view P, gsl_vector * T, double v, gsl_vector *approxE){
 }
 
 int main(){
+	time_t begin = clock();
 	printf("\n\nParameters\n--------------------\n");
 	double v = 1481;
 	double P_data [] = { 0, 0, 0,
-			     1, 0, 0,
+			     .1, 0, .1,
 			     0, 1, 0,
-			    -1, 0, 0,
-			     0,-1, 0 };
+			    -.1, 0, 0,
+			     0,-.1, 0 };
 	double E_data[] = { -4, 6, 5 };
 	gsl_vector_view E = gsl_vector_view_array(E_data, 3);
 	gsl_matrix_view P = gsl_matrix_view_array(P_data, 5, 3);
 	gsl_vector *T = gsl_vector_alloc(5);
 	gsl_vector *approxE = gsl_vector_alloc(3);
+	printf("v = %g (m/s)\n",v);
+	printf("P = \n");
+	gsl_matrix_fprintf(stdout,&P.matrix,"%g");
+	printf("E = \n");
+	gsl_vector_fprintf(stdout,&E.vector,"%g");
+	
 	//gsl_matrix_fprintf(stdout, &P.matrix, "%g");
-	printf("TEST linSys\n--------------------\n");
-	TEST_linSys();
 	printf("\nProblem1: calc T\n--------------------\n");
 	problem1(P,E,v,T);
 	printf("T = \n");
@@ -169,7 +169,11 @@ int main(){
 	problem2(P,T,v,approxE);
 	printf("approxE = \n");
 	gsl_vector_fprintf(stdout,approxE,"%g");
-	 
+	time_t end = clock(); 
+	double time_spent = ((double)(end - begin)) / CLOCKS_PER_SEC;
+	printf("clocks %ld\n", CLOCKS_PER_SEC);
+	printf("\nbegin: %g\n  end: %g\n",(double)begin,(double)end);
+	printf("\nComputation Time (sec): %g\n",time_spent);
 	return 0;
 }
 

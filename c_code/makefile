@@ -7,3 +7,7 @@ main.run: $(OBJECTS)
 
 $(OBJECTS): $(FILES)
 	$(CC) -Wall -Iinclude -c $(FILES)
+
+clean:
+	rm -rf *.o
+	rm -rf a.out
